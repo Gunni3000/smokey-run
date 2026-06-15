@@ -734,8 +734,12 @@
   }
 
   function drawHud() {
+    context.shadowColor = COLORS.ink;
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    context.shadowBlur = 0;
     context.textAlign = "left";
-    context.fillStyle = COLORS.ink;
+    context.fillStyle = COLORS.white;
     context.font = "700 17px Courier New";
     context.fillText("ESCAPE TIME", 24, 38);
     context.font = "700 36px Courier New";
@@ -745,6 +749,9 @@
     context.font = "700 14px Courier New";
     context.fillText(`BEST ${formatTime(state.best)}`, WIDTH - 24, 42);
 
+    context.shadowColor = "transparent";
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 0;
     roundedRect(24, 96, WIDTH - 48, 30, 15, "#aab0b5", COLORS.ink, 4);
     const meterWidth = Math.max(0, (WIDTH - 58) * Math.max(0, state.distance) / 100);
     roundedRect(29, 101, meterWidth, 20, 10, state.distance < 30 ? COLORS.red : COLORS.mint);
