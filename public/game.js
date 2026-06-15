@@ -494,7 +494,7 @@
 
   function update(delta) {
     state.sceneTime += delta;
-    const backgroundSpeed = state.mode === "playing" ? state.speed * 0.13 : 22;
+    const backgroundSpeed = state.mode === "playing" ? state.speed * 0.2 : 28;
     const backgroundWidth = art.background.naturalWidth
       ? HEIGHT * (art.background.naturalWidth / art.background.naturalHeight)
       : WIDTH * 2;
