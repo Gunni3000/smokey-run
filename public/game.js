@@ -38,6 +38,14 @@
     tuna: loadKeyedImage("/assets/can-of-tuna.jpg"),
   };
 
+  const audio = {
+    music: loadSound("/assets/audio/smokey-run.wav", { loop: true, volume: 0.32 }),
+    hit: loadSound("/assets/audio/cardboard-box-hit.mp3", { volume: 0.62 }),
+    munch: loadSound("/assets/audio/munch-sound-effect.mp3", { volume: 0.62 }),
+    caught: loadSound("/assets/audio/meow-1.mp3", { volume: 0.62 }),
+    started: false,
+  };
+
   const state = {
     mode: "title",
     time: 0,
@@ -70,6 +78,30 @@
     const image = new Image();
     image.src = source;
     return image;
+  }
+
+  function loadSound(source, options = {}) {
+    const sound = new Audio(source);
+    sound.preload = "auto";
+    sound.loop = Boolean(options.loop);
+    sound.volume = options.volume ?? 1;
+    return sound;
+  }
+
+  function startAudio() {
+    if (audio.started) return;
+    audio.started = true;
+    audio.music.currentTime = 0;
+    audio.music.play().catch(() => {
+      audio.started = false;
+    });
+  }
+
+  function playSound(sound) {
+    if (!audio.started) return;
+    const effect = sound.cloneNode();
+    effect.volume = sound.volume;
+    effect.play().catch(() => {});
   }
 
   function loadAnimationFrame(source) {
@@ -249,6 +281,7 @@
   }
 
   function animationSample(sequence, framesPerSecond, frameOrder) {
+    if (!sequence.length) return { current: null, next: null, blend: 0 };
     const progress = state.sceneTime * framesPerSecond;
     const step = Math.floor(progress);
     const blend = progress - step;
@@ -256,20 +289,22 @@
     const currentIndex = order[step % order.length];
     const nextIndex = order[(step + 1) % order.length];
     return {
-      current: sequence[currentIndex].cutout,
-      next: sequence[nextIndex].cutout,
+      current: sequence[currentIndex]?.cutout || null,
+      next: sequence[nextIndex]?.cutout || null,
       blend: blend * blend * (3 - 2 * blend),
     };
   }
 
   function animationFrameByProgress(sequence, progress) {
+    if (!sequence.length) return null;
     const clampedProgress = Math.max(0, Math.min(0.999, progress));
-    return sequence[Math.floor(clampedProgress * sequence.length)].cutout;
+    return sequence[Math.floor(clampedProgress * sequence.length)]?.cutout || null;
   }
 
   function animationFrame(sequence, framesPerSecond) {
+    if (!sequence.length) return null;
     const frameIndex = Math.floor(state.sceneTime * framesPerSecond) % sequence.length;
-    return sequence[frameIndex].cutout;
+    return sequence[frameIndex]?.cutout || null;
   }
 
   function drawAnchoredFrame(frame, anchorX, groundY, targetWidth, referenceWidth, anchorRatio, opacity = 1) {
@@ -321,6 +356,7 @@
   }
 
   function resetGame() {
+    startAudio();
     state.mode = "playing";
     state.time = 0;
     state.speed = 285;
@@ -453,6 +489,7 @@
   function hitObstacle(object) {
     const player = state.player;
     object.hit = true;
+    playSound(audio.hit);
     player.invulnerable = 1.15;
     player.velocityY = Math.min(player.velocityY, -180);
     state.distance -= 22;
@@ -465,6 +502,7 @@
 
   function collectFood(object) {
     object.hit = true;
+    playSound(audio.munch);
     state.player.boost = 2.1;
     state.distance = Math.min(100, state.distance + 16);
     state.message = `${object.label} BOOST!`;
@@ -488,6 +526,7 @@
 
   function endGame() {
     state.mode = "gameover";
+    playSound(audio.caught);
     state.best = Math.max(state.best, state.time);
     localStorage.setItem(STORAGE_KEY, state.best.toFixed(2));
   }
